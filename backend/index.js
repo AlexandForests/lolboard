@@ -26,5 +26,26 @@ app.get('/api/player/:gameName/:tagLine', async (req, res) => {
   }
 });
 
+// === NEW BULK ROUTE ===
+app.post('/api/bulk-load', async (req, res) => {
+  const players = req.body; // Expecting array of { gameName, tagLine }
+  const results = [];
+
+  for (const player of players) {
+    const { gameName, tagLine } = player;
+    try {
+      console.log(`[BULK] Fetching: ${gameName}#${tagLine}`);
+      const stats = await getPlayerStatsFromRiot(gameName, tagLine);
+      await saveToSupabase(stats);
+      results.push({ gameName, tagLine, success: true });
+    } catch (error) {
+      console.error(`[BULK ERROR] ${gameName}#${tagLine}`, error);
+      results.push({ gameName, tagLine, success: false, error: error.message });
+    }
+  }
+
+  res.json({ results });
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
