@@ -10,16 +10,19 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.get('/api/player/:name/:tag', async (req, res) => {
-  const { name, tag } = req.params;
+app.get('/api/player/:gameName/:tagLine', async (req, res) => {
+  const { gameName, tagLine } = req.params;
 
   try {
-    const stats = await getPlayerStatsFromRiot(name, tag);
+    console.log(`[REQUEST] /api/player/${gameName}/${tagLine}`);
+    const stats = await getPlayerStatsFromRiot(gameName, tagLine);
+    console.log(`[SUCCESS] Riot stats fetched`, stats);
+
     await saveToSupabase(stats);
     res.json({ success: true, stats });
   } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Something went wrong!' });
+    console.error('[ERROR]', error);
+    res.status(500).json({ error: error.message || 'Something went wrong!' });
   }
 });
 
